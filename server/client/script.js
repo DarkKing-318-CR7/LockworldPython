@@ -1,37 +1,47 @@
 // Khởi tạo bản đồ
-var map = L.map('map').setView([0, 0], 2);
+const map = L.map('map').setView([30, 0], 2);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
 }).addTo(map);
 
 // Tải danh sách quốc gia
 fetch('http://localhost:5000/countries')
-    .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok: ' + response.statusText);
-        return response.json();
-    })
+    .then(response => response.json())
     .then(countries => {
         const select = document.getElementById('countrySelect');
-        if (!select) {
-            console.error("countrySelect element not found");
-            return;
-        }
-        select.innerHTML = '<option value="">Select a country</option>'; // Reset dropdown
-        let addedCount = 0;
+        select.innerHTML = '<option value="">Select a country</option>';
         countries.forEach(country => {
             const option = document.createElement('option');
             option.value = country.code;
             option.text = country.name;
             select.appendChild(option);
-            addedCount++;
         });
-        console.log(`Loaded and added ${addedCount} countries:`, countries.map(c => c.name));
-        // Nếu test thành công, bỏ slice(0, 20) và dùng full list
-        // countries.forEach(country => { ... });
-    })
-    .catch(error => {
-        console.error("Error fetching countries:", error);
+
+        // Kích hoạt Select2 (sau khi options đã được thêm xong)
+        // $('#countrySelect').select2({
+        //     placeholder: 'Tìm quốc gia...',
+        //     allowClear: true,
+        // });
+        $('#countrySelect').select2({
+         placeholder: 'Tìm quốc gia...',
+        allowClear: true,
+        templateResult: formatCountryWithFlag,
+        templateSelection: formatCountryWithFlag
+        });
+
     });
+
+    function formatCountryWithFlag(option) {
+    if (!option.id) return option.text;
+    const code = option.id.toLowerCase();
+    const flagUrl = `https://flagcdn.com/w20/${code}.png`;
+    const $option = $(`
+        <span><img src="${flagUrl}" class="flag-icon" style="width: 20px; height: 14px; vertical-align: middle; margin-right: 6px;">${option.text}</span>
+    `);
+    return $option;
+    }
+
+
 
 // Đồng hồ kim
 function drawAnalogClock(time) {
@@ -40,16 +50,20 @@ function drawAnalogClock(time) {
         console.error("Canvas not supported or not found");
         return;
     }
+
     const ctx = canvas.getContext('2d');
     const radius = canvas.width / 2 - 10;
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
+    // Xóa đồng hồ cũ
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Vẽ vòng tròn đồng hồ
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.lineWidth = 4;
-    ctx.strokeStyle = document.body.classList.contains('dark-mode') ? '#fff' : '#000';
+    ctx.strokeStyle = '#000';  // màu viền
     ctx.stroke();
 
     // Vẽ số
@@ -58,9 +72,9 @@ function drawAnalogClock(time) {
     ctx.textBaseline = "middle";
     for (let num = 1; num <= 12; num++) {
         const angle = (num - 3) * (Math.PI * 2) / 12;
-        const x = centerX + Math.cos(angle) * (radius - 20);
-        const y = centerY + Math.sin(angle) * (radius - 20);
-        ctx.fillStyle = document.body.classList.contains('dark-mode') ? '#fff' : '#000';
+        const x = centerX + Math.cos(angle) * (radius - 30); // Đẩy số ra xa hơn
+        const y = centerY + Math.sin(angle) * (radius - 30);
+        ctx.fillStyle = '#000';  // màu số
         ctx.fillText(num, x, y);
     }
 
@@ -69,15 +83,15 @@ function drawAnalogClock(time) {
         const angle = (i - 15) * (Math.PI * 2) / 60;
         ctx.beginPath();
         ctx.moveTo(
-            centerX + Math.cos(angle) * (radius - 10),
-            centerY + Math.sin(angle) * (radius - 10)
+            centerX + Math.cos(angle) * (radius - 5),
+            centerY + Math.sin(angle) * (radius - 5)
         );
         ctx.lineTo(
-            centerX + Math.cos(angle) * (radius - (i % 5 === 0 ? 20 : 15)),
-            centerY + Math.sin(angle) * (radius - (i % 5 === 0 ? 20 : 15))
+            centerX + Math.cos(angle) * (radius - (i % 5 === 0 ? 12 : 8)),
+            centerY + Math.sin(angle) * (radius - (i % 5 === 0 ? 12 : 8))
         );
-        ctx.lineWidth = i % 5 === 0 ? 3 : 1;
-        ctx.strokeStyle = document.body.classList.contains('dark-mode') ? '#ccc' : '#333';
+        ctx.lineWidth = i % 5 === 0 ? 2 : 1;
+        ctx.strokeStyle = '#666'; // màu vạch chia
         ctx.stroke();
     }
 
@@ -93,7 +107,7 @@ function drawAnalogClock(time) {
     ctx.moveTo(0, 10);
     ctx.lineTo(0, -radius * 0.5);
     ctx.lineWidth = 8;
-    ctx.strokeStyle = document.body.classList.contains('dark-mode') ? '#fff' : '#000';
+    ctx.strokeStyle = '#000';
     ctx.stroke();
     ctx.restore();
 
@@ -105,7 +119,7 @@ function drawAnalogClock(time) {
     ctx.moveTo(0, 10);
     ctx.lineTo(0, -radius * 0.7);
     ctx.lineWidth = 5;
-    ctx.strokeStyle = document.body.classList.contains('dark-mode') ? '#fff' : '#000';
+    ctx.strokeStyle = '#000';
     ctx.stroke();
     ctx.restore();
 
@@ -127,6 +141,7 @@ function drawAnalogClock(time) {
     ctx.fillStyle = 'red';
     ctx.fill();
 }
+
 
 // Đồng hồ số
 function updateDigitalClock(time) {
@@ -164,54 +179,61 @@ function updateClock() {
 // Lấy thời gian khi click bản đồ
 map.on('click', function(e) {
     const { lat, lng } = e.latlng;
-    console.log(`Clicked at lat: ${lat}, lng: ${lng}`); // Debug tọa độ
+
     fetch('http://localhost:5000/time-by-coordinates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lat, lng })
     })
-    .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok: ' + response.statusText);
-        return response.json();
-    })
-    .then(data => {
-        if (data.error) {
-            document.getElementById('time').innerText = data.error;
-            console.log("API Error:", data.error); // Debug lỗi
-        } else {
-            const time = new Date(data.time);
-            drawAnalogClock(time);
-            updateDigitalClock(time);
-            document.getElementById('time').innerText = `${data.country}: ${data.time} (Date: ${time.toLocaleDateString()})`;
-            // Cập nhật dropdown với quốc gia được chọn
-            const select = document.getElementById('countrySelect');
-            select.value = data.country_code || '';
+    .then(response => response.json())
+    .then(timeData => {
+        if (!timeData.country || timeData.error) {
+            alert("❌ Không tìm thấy quốc gia tại vị trí này");
+            return;
         }
+
+        const time = new Date(timeData.time);
+        drawAnalogClock(time);
+        updateDigitalClock(time);
+        document.getElementById('time').innerText =
+            `${timeData.country}: ${timeData.time} (Date: ${time.toLocaleDateString()})`;
+
+        document.getElementById('countrySelect').value = timeData.country_code || '';
+        saveQueryHistory(timeData.country_code);
+
+        // Gọi API thời tiết
+        fetch('http://localhost:5000/weather', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lat, lon: lng })
+        })
+        .then(response => response.json())
+        .then(weatherData => {
+            if (!weatherData.main || !weatherData.weather) {
+                alert("❌ Không lấy được thông tin thời tiết");
+                return;
+            }
+
+            const weatherDiv = document.getElementById('weather-info');
+            weatherDiv.innerHTML = `
+                <div>🌡️ Nhiệt độ: ${weatherData.main.temp}°C</div>
+                <div>🌥️ Thời tiết: ${weatherData.weather[0].description}</div>
+            `;
+
+        })
+        .catch(err => {
+            console.error("❌ Lỗi thời tiết:", err);
+            alert("Không lấy được dữ liệu thời tiết");
+        });
     })
     .catch(error => {
-        console.error("Error getting time by coordinates:", error);
-        document.getElementById('time').innerText = "Error fetching time";
+        console.error("❌ Lỗi thời gian:", error);
+        alert("Không lấy được dữ liệu thời gian");
     });
 });
 
-// Chuyển đổi chế độ tối
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    drawAnalogClock(new Date()); // Cập nhật lại đồng hồ để đổi màu
-}
 
-// Chuyển đổi chế độ toàn màn hình
-function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            console.error("Error entering fullscreen:", err);
-        });
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        }
-    }
-}
+
 
 // ...existing code...
 
@@ -311,43 +333,103 @@ function drawAnalogClockCustom(time, canvasId) {
     ctx.fill();
 }
 
-// ...existing code...
-
+//Danh sách mấy nước vừa chọn
 function saveQueryHistory(code) {
+    const select = document.getElementById('countrySelect');
+    const name = select.options[select.selectedIndex].text;
+
     let history = JSON.parse(localStorage.getItem('queryHistory') || '[]');
-    if (!history.includes(code)) {
-        history.unshift(code);
-        if (history.length > 5) history = history.slice(0, 5); // Lưu tối đa 5 quốc gia
+
+    
+    if (!history.find(item => item.code === code)) {
+        history.unshift({ code, name });
+        if (history.length > 5) history = history.slice(0, 5); // Lưu tối đa 5 mục
         localStorage.setItem('queryHistory', JSON.stringify(history));
     }
+
     renderQueryHistory();
 }
 
+
+
+// function renderQueryHistory() {
+//     let history = JSON.parse(localStorage.getItem('queryHistory') || '[]');
+//     const div = document.getElementById('query-history');
+//     if (!div) return;
+
+//     div.innerHTML = 'Lịch sử: ';
+//     history.forEach(({ code, name }) => {
+//         const btn = document.createElement('button');
+//         btn.innerHTML = `
+//             <img src="https://flagcdn.com/w20/${code.toLowerCase()}.png" 
+//                  alt="${name}" 
+//                  style="width: 20px; height: 14px; margin-right: 6px; vertical-align: middle;">
+//             ${name}
+//         `;
+//         btn.onclick = () => {
+//             document.getElementById('countrySelect').value = code;
+//             updateClock();
+//         };
+//         div.appendChild(btn);
+//     });
+// }
+
+
 function renderQueryHistory() {
     let history = JSON.parse(localStorage.getItem('queryHistory') || '[]');
-    const div = document.getElementById('query-history');
-    if (!div) return;
-    div.innerHTML = 'Lịch sử: ';
-    history.forEach(code => {
+    const container = document.getElementById('query-history');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    // Bọc tất cả vào một wrapper
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.gap = '8px';
+    wrapper.style.flexWrap = 'wrap';
+
+    // Tiêu đề
+    const title = document.createElement('span');
+    title.className = 'history-title';
+    title.innerText = 'Lịch sử:';
+    wrapper.appendChild(title);
+
+    // Các nút
+    history.slice(0, 3).forEach(({ code, name }) => {
         const btn = document.createElement('button');
-        btn.innerText = code;
+        btn.innerHTML = `
+            <img src="https://flagcdn.com/w20/${code.toLowerCase()}.png"
+                 alt="${name}"
+                 style="width: 20px; height: 14px; margin-right: 6px; vertical-align: middle;">
+            ${name}
+        `;
         btn.onclick = () => {
             document.getElementById('countrySelect').value = code;
             updateClock();
         };
-        div.appendChild(btn);
+        wrapper.appendChild(btn);
     });
+
+    container.appendChild(wrapper);
 }
+
+
+
 
 // Gọi khi trang load
 window.onload = function() {
     updateClock();
-    setInterval(updateClock, 1000);
+    setInterval(updateClock, 1000);// Cập nhật mỗi giây
     renderQueryHistory();
 };
 
-// Khởi động đồng hồ khi tải trang
-window.onload = function() {
-    updateClock();
-    setInterval(updateClock, 1000); // Cập nhật mỗi giây
-};
+
+
+
+
+
+
+
+
+

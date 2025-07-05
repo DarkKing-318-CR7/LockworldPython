@@ -1,0 +1,142 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f0f4f8;
+}
+
+#app-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+    max-width: unset;
+    margin: auto;
+    transform: translateX(-50px);
+    min-width: 0;
+}
+
+#clock-panel {
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+}
+
+.clock-container {
+    margin: 20px 0;
+}
+
+.clock {
+    border: 6px solid #4a5568; /* màu xám đậm hơn */
+    border-radius: 50%;
+    box-shadow:
+        inset 0 0 8px rgba(0,0,0,0.2),  /* bóng trong */
+        0 4px 15px rgba(0,0,0,0.1);      /* bóng ngoài */
+    background: radial-gradient(circle at center, #ffffff, #e2e8f0); /* gradient nhẹ */
+}
+
+
+.digital {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 10px 0;
+    padding: 6px 12px;
+    background: #fff;
+    border-radius: 8px;
+    display: inline-block;
+    box-shadow: 0 0 4px rgba(0,0,0,0.1);
+}
+
+.controls {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+select, button {
+    padding: 6px 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+#map-panel {
+    flex: 1;
+    max-width: 10000px;
+    max-height: 900px;
+    height: 500px;
+    width: 1500px;
+    border: 10px solid #cfd5e0;
+    margin-top: 30px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+
+/* #query-history {
+    margin-top: 10px;
+} */
+
+#query-history {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    margin-left: 150px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 5px 0;
+    flex-shrink: 0;
+    min-width: 0;
+    flex: 1 1 0;
+}
+
+.history-title {
+    font-weight: bold;
+    white-space: nowrap;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+#query-history button {
+    display: flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#query-history button img {
+    margin-right: 5px;
+}
+
+
+#multi-clocks {
+    margin-top: 20px;
+}
+
+.leaflet-control-zoom {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.leaflet-control-zoom a {
+    background-color: #ffffff;
+    color: #333;
+}
+
+
+

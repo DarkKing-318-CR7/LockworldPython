@@ -5,10 +5,15 @@ import geopandas as gpd
 from shapely.geometry import Point
 import json
 import os
+import requests
 
-app = Flask(__name__, static_folder='client', template_folder='client')
+# --- CẤU HÌNH ---
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+app = Flask(__name__, static_folder=os.path.join(base_dir, 'client'), template_folder=os.path.join(base_dir, 'client'))
 
-# Thêm header CORS
+API_KEY = '0e9b2101808eadb1e39a525b043c7a9b'  # 🔁 Nhớ thay bằng API thật
+
+# --- CORS ---
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -16,23 +21,19 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
     return response
 
-# Tải danh sách quốc gia và múi giờ
+# --- Load dữ liệu ---
 with open('countries.json', 'r') as f:
     countries = json.load(f)
 
-# Tải Shapefile
 shp_path = os.path.join(os.path.dirname(__file__), 'ne_110m_admin_0_countries.shp')
-print(f"Looking for file: {shp_path}")
-if not os.path.exists(shp_path):
-    raise FileNotFoundError(f"File {shp_path} does not exist")
 world = gpd.read_file(shp_path)
 
-# Route để phục vụ index.html
+# --- ROUTES ---
+
 @app.route('/')
 def serve_index():
     return send_from_directory('client', 'index.html')
 
-# Route để phục vụ các file tĩnh khác (CSS, JS)
 @app.route('/<path:path>')
 def serve_static(path):
     return send_from_directory('client', path)
@@ -54,13 +55,11 @@ def get_time(country_code):
 def get_time_by_coordinates():
     data = request.get_json()
     lat, lng = float(data['lat']), float(data['lng'])
-    point = Point(lng, lat)  # Shapely dùng (lng, lat)
+    point = Point(lng, lat)
 
-    # Tìm quốc gia chứa tọa độ
     for _, row in world.iterrows():
-        if row['geometry'].contains(point):
+        if row['geometry'].intersects(point):
             country_code = row.get('ISO_A2', '').upper()
-            print(f"Found country code: {country_code} at lat={lat}, lng={lng}")  # Debug
             for country in countries:
                 if country['code'].upper() == country_code:
                     tz = pytz.timezone(country['timezone'])
@@ -70,8 +69,22 @@ def get_time_by_coordinates():
                         "time": current_time,
                         "country_code": country['code']
                     })
-    print(f"No country found at lat={lat}, lng={lng}")  # Debug
     return jsonify({"error": "No country found at coordinates"}), 404
 
+@app.route('/weather', methods=['POST'])
+def get_weather():
+    data = request.get_json()
+    lat = data['lat']
+    lon = data['lon']
+    
+    url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&lang=vi&appid=0e9b2101808eadb1e39a525b043c7a9b"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        return jsonify(response.json())
+    else:
+        return jsonify({'error': 'Không lấy được thời tiết'}), 400
+
+# --- MAIN ---
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
