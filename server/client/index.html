@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>World Clock</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    
+
+
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- jQuery (bắt buộc cho Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+</head>
+
+
+
+<body>
+
+<div id="app-container">
+    <!-- Đồng hồ và điều khiển -->
+    <div id="clock-panel">
+        <h1>World Clock</h1>
+
+        <div class="clock-container">
+            <canvas id="analog-clock" class="clock" width="250" height="250"></canvas>
+        </div>
+
+        <div class="digital" id="digital-clock">--:--:--</div>
+        <div id="time">Chưa chọn quốc gia</div>
+        <div id="weather-info" style="margin-top: 5px;"></div>
+
+
+        <div class="controls">
+            <select id="countrySelect" style="width: 250px;">
+                <option value="">Select a country</option>
+            </select>
+
+            <button onclick="addMultiClock()">Thêm múi giờ</button>
+        </div>
+
+        
+        <div id="query-history"></div>
+        
+
+        <div id="multi-clocks"></div>
+    </div>
+
+    <!-- Bản đồ -->
+    <div id="map-panel">
+        <div id="map"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script src="script.js" defer></script>
+
+</body>
+</html>
